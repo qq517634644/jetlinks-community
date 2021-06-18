@@ -1,5 +1,6 @@
 package org.jetlinks.community.device.message.writer;
 
+import com.alibaba.fastjson.JSON;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.jetlinks.community.device.service.data.DeviceDataService;
@@ -27,6 +28,7 @@ public class TimeSeriesMessageWriterConnector {
      */
     @Subscribe(topics = "/device/**", id = "device-message-ts-writer")
     public Mono<Void> writeDeviceMessageToTs(DeviceMessage message) {
+        log.info("{}", JSON.toJSONString(message));
         return dataService.saveDeviceMessage(message);
     }
 
