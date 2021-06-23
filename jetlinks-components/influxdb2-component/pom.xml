@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xmlns="http://maven.apache.org/POM/4.0.0"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+	<parent>
+		<artifactId>jetlinks-components</artifactId>
+		<groupId>org.jetlinks.community</groupId>
+		<version>1.10.0-SNAPSHOT</version>
+		<relativePath>../pom.xml</relativePath>
+	</parent>
+
+	<artifactId>influxdb2-component</artifactId>
+
+	<dependencies>
+		<dependency>
+			<groupId>com.influxdb</groupId>
+			<artifactId>influxdb-client-reactive</artifactId>
+			<version>2.1.0</version>
+		</dependency>
+		<dependency>
+			<groupId>com.influxdb</groupId>
+			<artifactId>flux-dsl</artifactId>
+			<version>2.1.0</version>
+		</dependency>
+		<dependency>
+			<groupId>com.squareup.okhttp3</groupId>
+			<artifactId>logging-interceptor</artifactId>
+			<version>4.9.1</version>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-configuration-processor</artifactId>
+		</dependency>
+
+		<dependency>
+			<groupId>org.apache.logging.log4j</groupId>
+			<artifactId>log4j-core</artifactId>
+		</dependency>
+
+		<dependency>
+			<groupId>org.slf4j</groupId>
+			<artifactId>log4j-over-slf4j</artifactId>
+		</dependency>
+
+		<dependency>
+			<groupId>io.projectreactor</groupId>
+			<artifactId>reactor-core</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.hswebframework.web</groupId>
+			<artifactId>hsweb-commons-crud</artifactId>
+			<version>${hsweb.framework.version}</version>
+		</dependency>
+
+		<dependency>
+			<groupId>org.hswebframework</groupId>
+			<artifactId>hsweb-easy-orm-rdb</artifactId>
+		</dependency>
+
+		<dependency>
+			<groupId>org.jetlinks</groupId>
+			<artifactId>jetlinks-core</artifactId>
+			<version>${jetlinks.version}</version>
+		</dependency>
+
+		<dependency>
+			<groupId>io.projectreactor.netty</groupId>
+			<artifactId>reactor-netty</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>io.projectreactor.addons</groupId>
+			<artifactId>reactor-adapter</artifactId>
+			<version>3.4.2</version>
+			<scope>compile</scope>
+		</dependency>
+	</dependencies>
+
+</project>
