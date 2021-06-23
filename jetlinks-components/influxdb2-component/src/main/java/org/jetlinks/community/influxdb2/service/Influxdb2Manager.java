@@ -3,11 +3,17 @@ package org.jetlinks.community.influxdb2.service;
 import com.influxdb.client.write.Point;
 import com.influxdb.query.FluxRecord;
 import lombok.extern.slf4j.Slf4j;
+import org.jetlinks.community.influxdb2.InfluxDataEntity;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
+import java.util.Objects;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 /**
  * @author Tensai
@@ -31,19 +37,31 @@ public class Influxdb2Manager {
     public Flux<Map<String, Object>> query(com.influxdb.query.dsl.Flux flux) {
         log.error("Flux -- {}", flux.toString());
         return service.query(flux, FluxRecord::getValues);
-//        Map<Long, List<Map<String, Object>>> mapT = new HashMap<>(32);
-//        service.query(flux, FluxRecord::getValues).map(
-//            map->{
-//                mapT.computeIfAbsent(((Instant) map.get("_time")).toEpochMilli(), k ->new ArrayList<>()).add(map);
-//                return mapT;
-//            }
-//        ).map(
-//            map->{
-//
-//            }
-//        );
-//        List<Map<String, Object>> mapList = new ArrayList<>();
-//
-//        return Flux.fromIterable(mapList);
+    }
+
+
+    public Flux<InfluxDataEntity> queryInfluxData(com.influxdb.query.dsl.Flux flux) {
+        log.error("queryInfluxData -- {}", flux.toString());
+        List<InfluxDataEntity> listTemp = new ArrayList<>();
+        return service.query(flux, Function.identity())
+            .collectList()
+            .flatMap(list -> {
+                list.stream().collect(Collectors.groupingBy(fluxRecord -> Objects.requireNonNull(fluxRecord.getTime()).toEpochMilli()))
+                    .forEach((k, v) -> {
+                        InfluxDataEntity dataEntity = new InfluxDataEntity(k);
+                        v.forEach(item -> {
+                            dataEntity.getFields().put(String.valueOf(item.getValues().get("_field")), item.getValues().get("_value"));
+                            item.getValues().forEach((m, n) -> {
+                                if (!m.startsWith("_") && !"result".equals(m) && !"table".equals(m)) {
+                                    dataEntity.getTags().put(m, n);
+                                }
+                            });
+                        });
+                        listTemp.add(dataEntity);
+                    });
+                return Mono.just(listTemp);
+            })
+            .flux()
+            .flatMap(list -> Flux.just(list.toArray(new InfluxDataEntity[0])));
     }
 }

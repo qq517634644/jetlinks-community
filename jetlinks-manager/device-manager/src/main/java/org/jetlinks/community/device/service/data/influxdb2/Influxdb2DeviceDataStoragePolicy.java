@@ -4,6 +4,8 @@ import com.alibaba.fastjson.JSON;
 import com.influxdb.client.write.Point;
 import com.influxdb.query.dsl.functions.restriction.Restrictions;
 import lombok.extern.slf4j.Slf4j;
+import org.hswebframework.ezorm.core.param.Column;
+import org.hswebframework.ezorm.core.param.Sort;
 import org.hswebframework.web.api.crud.entity.PagerResult;
 import org.hswebframework.web.api.crud.entity.QueryParamEntity;
 import org.jetlinks.community.device.service.LocalDeviceInstanceService;
@@ -22,6 +24,7 @@ import java.time.temporal.ChronoUnit;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 
 /**
  * Influxdb2时序数据存储策略
@@ -83,12 +86,19 @@ public abstract class Influxdb2DeviceDataStoragePolicy extends AbstractDeviceDat
         return Mono.zip(
             manager.query(getCountFlux(metric, paramEntity))
                 .collectList(),
-            manager.query(getLimitFlux(metric, paramEntity))
+            manager.queryInfluxData(getLimitFlux(metric, paramEntity))
                 .map(
-                    map -> new SimpleTimeSeriesData(((Instant) map.get("_time")).toEpochMilli(), map)
+                    data -> (TimeSeriesData) new SimpleTimeSeriesData(data.getTime(), data.getAll())
                 ).map(mapper)
                 .collectList(),
-            (cou, res) -> PagerResult.of(((Long) cou.get(0).get("_value")).intValue(), res, paramEntity));
+            (cou, res) -> PagerResult.of(getTotal(cou), res, paramEntity));
+    }
+
+    private int getTotal(List<Map<String, Object>> cou) {
+        if (cou == null || cou.size() == 0 || cou.get(0).get("_value") == null) {
+            return 0;
+        }
+        return ((Long) cou.get(0).get("_value")).intValue();
     }
 
     /**
@@ -184,10 +194,7 @@ public abstract class Influxdb2DeviceDataStoragePolicy extends AbstractDeviceDat
             .range(Instant.now().plus(-2, ChronoUnit.DAYS))
             .filter(Restrictions.measurement().equal("properties_" + productId))
             .filter(Restrictions.tag("deviceId").equal(deviceId));
-        if (param.getSorts() != null) {
-            // TODO 完善
-            flux = flux.sort();
-        }
+        flux = flux.sort(makeSortColumnList(param.getSorts())).withDesc(true);
         return flux;
     }
 
@@ -213,10 +220,16 @@ public abstract class Influxdb2DeviceDataStoragePolicy extends AbstractDeviceDat
         AtomicReference<com.influxdb.query.dsl.Flux> fluxTemp = new AtomicReference<>();
         com.influxdb.query.dsl.Flux finalFlux = flux;
         fieldListMap.forEach((k, v) -> fluxTemp.set(finalFlux.filter(Restrictions.or(v.toArray(new Restrictions[0])))));
-        if (param.getSorts() != null) {
-            // TODO 完善
-            flux = fluxTemp.get().sort();
-        }
+        flux = fluxTemp.get().sort(makeSortColumnList(param.getSorts())).withDesc(true);
         return flux;
+    }
+
+    private List<String> makeSortColumnList(List<Sort> sortList) {
+        List<String> sortColumnList = new ArrayList<>();
+        sortColumnList.add("_time");
+        if (sortList != null) {
+            sortColumnList.addAll(sortList.stream().map(Column::getName).filter(name -> !"createTime".equals(name)).collect(Collectors.toList()));
+        }
+        return sortColumnList;
     }
 }
