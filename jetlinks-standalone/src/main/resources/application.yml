@@ -30,6 +30,7 @@ spring:
     password: jetlinks
     pool:
       max-size: 32
+      max-idle-time: 2m # 值不能大于mysql server的wait_timeout配置
   reactor:
     debug-agent:
       enabled: false
@@ -139,6 +140,7 @@ logging:
     #    org.elasticsearch: error
     org.jetlinks.pro.influx: trace
     org.elasticsearch: error
+    org.elasticsearch.deprecation.search.aggregations.bucket.histogram: error
   config: classpath:logback-spring.xml
 vertx:
   max-event-loop-execute-time-unit: seconds
