@@ -61,6 +61,7 @@ public class TopicMessageCodec {
         }
 
         log.info("handle demo message:{}:{}", topic, payload);
+        log.info("handle demo message json:{}", message);
         return message;
     }
 

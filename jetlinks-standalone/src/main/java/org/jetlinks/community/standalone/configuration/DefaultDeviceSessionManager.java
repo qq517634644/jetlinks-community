@@ -98,7 +98,9 @@ public class DefaultDeviceSessionManager implements DeviceSessionManager {
             .distinct()
             .publishOn(Schedulers.parallel())
             .filterWhen(session -> {
+                log.error("check session - {}", session.getDeviceId());
                 if (!session.isAlive() || session.getOperator() == null) {
+                    log.error("check session not alive - {}", session.getDeviceId());
                     return Mono.just(true);
                 }
                 return Mono.zip(
