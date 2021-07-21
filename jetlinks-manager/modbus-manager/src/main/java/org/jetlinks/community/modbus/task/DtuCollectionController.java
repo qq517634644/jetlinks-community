@@ -1,4 +1,4 @@
-package org.jetlinks.community.standalone.task;
+package org.jetlinks.community.modbus.task;
 
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.hswebframework.web.authorization.annotation.Authorize;

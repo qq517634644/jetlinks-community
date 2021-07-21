@@ -14,6 +14,7 @@
     <modules>
         <module>authentication-manager</module>
         <module>device-manager</module>
+        <module>modbus-manager</module>
         <module>network-manager</module>
         <module>notify-manager</module>
         <module>logging-manager</module>

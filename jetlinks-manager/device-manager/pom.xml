@@ -65,16 +65,21 @@
             <artifactId>hsweb-easy-orm-rdb</artifactId>
         </dependency>
 
-        <dependency>
-            <groupId>${project.groupId}</groupId>
-            <artifactId>gateway-component</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>com.github.ben-manes.caffeine</groupId>
-            <artifactId>caffeine</artifactId>
-        </dependency>
+	    <dependency>
+		    <groupId>${project.groupId}</groupId>
+		    <artifactId>gateway-component</artifactId>
+		    <version>${project.version}</version>
+	    </dependency>
+	    <dependency>
+		    <groupId>com.github.ben-manes.caffeine</groupId>
+		    <artifactId>caffeine</artifactId>
+	    </dependency>
 
+	    <dependency>
+		    <groupId>org.jetlinks.community</groupId>
+		    <artifactId>modbus-manager</artifactId>
+		    <version>${project.version}</version>
+	    </dependency>
     </dependencies>
 
 </project>

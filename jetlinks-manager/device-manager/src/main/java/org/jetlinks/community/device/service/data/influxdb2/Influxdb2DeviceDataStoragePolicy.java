@@ -191,7 +191,7 @@ public abstract class Influxdb2DeviceDataStoragePolicy extends AbstractDeviceDat
         com.influxdb.query.dsl.Flux flux = com.influxdb.query.dsl.Flux
             .from(influxdb2Properties.getBucket())
             // TODO 完善
-            .range(Instant.now().plus(-2, ChronoUnit.DAYS))
+            .range(Instant.now().plus(-6, ChronoUnit.HOURS))
             .filter(Restrictions.measurement().equal("properties_" + productId))
             .filter(Restrictions.tag("deviceId").equal(deviceId));
         flux = flux.sort(makeSortColumnList(param.getSorts())).withDesc(true);
@@ -202,7 +202,7 @@ public abstract class Influxdb2DeviceDataStoragePolicy extends AbstractDeviceDat
         com.influxdb.query.dsl.Flux flux = com.influxdb.query.dsl.Flux
             .from(influxdb2Properties.getBucket())
             // TODO 完善
-            .range(Instant.now().plus(-2, ChronoUnit.DAYS))
+            .range(Instant.now().plus(-6, ChronoUnit.HOURS))
             .filter(Restrictions.measurement().equal(metric));
         Map<String, List<Restrictions>> fieldListMap = new HashMap<>(16);
         param.getTerms().forEach(term -> {

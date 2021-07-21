@@ -72,7 +72,7 @@ public class TcpServerProvider implements NetworkProvider<TcpServerProperties> {
         payloadParserBuilder.build(properties.getParserType(), properties);
         tcpServer.setParserSupplier(() -> payloadParserBuilder.build(properties.getParserType(), properties));
         tcpServer.setServer(instances);
-        tcpServer.setKeepAliveTimeout(properties.getLong("keepAliveTimeout", Duration.ofMinutes(10).toMillis()));
+        tcpServer.setKeepAliveTimeout(properties.getLong("keepAliveTimeout", Duration.ofMinutes(1).toMillis()));
         // 针对JVM做的多路复用优化
         // 多个server listen同一个端口，每个client连接的时候vertx会分配
         // 一个connection只能在一个server中处理

@@ -244,7 +244,7 @@ public class Influxdb2ColumnDeviceDataStoragePolicy extends Influxdb2DeviceDataS
         if (metadata instanceof Converter) {
             return ((Converter<?>) metadata).convert(value);
         }
-        log.info("value - {}", value);
+//        log.info("value - {}", value);
         return value;
     }
 

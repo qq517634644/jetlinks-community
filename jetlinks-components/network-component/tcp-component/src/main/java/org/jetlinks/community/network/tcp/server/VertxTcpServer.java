@@ -33,7 +33,7 @@ public class VertxTcpServer implements TcpServer {
     Collection<NetServer> tcpServers;
     private Supplier<PayloadParser> parserSupplier;
     @Setter
-    private long keepAliveTimeout = Duration.ofMinutes(10).toMillis();
+    private long keepAliveTimeout = Duration.ofMinutes(1).toMillis();
 
     public VertxTcpServer(String id) {
         this.id = id;

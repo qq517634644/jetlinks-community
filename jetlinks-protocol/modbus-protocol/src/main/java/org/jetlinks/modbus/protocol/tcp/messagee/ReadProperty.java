@@ -8,7 +8,7 @@ import org.jetlinks.core.message.DeviceMessage;
 import org.jetlinks.core.message.property.ReportPropertyMessage;
 import org.jetlinks.modbus.protocol.tcp.ModbusDeviceMessage;
 import org.jetlinks.modbus.protocol.tcp.TcpPayload;
-import org.jetlinks.modbus.protocol.tcp.model.ModbusProductModel;
+import org.jetlinks.modbus.protocol.tcp.model.ModbusProductModelView;
 import org.jetlinks.modbus.protocol.tcp.model.ProductModelEnum;
 
 import java.util.HashMap;
@@ -46,7 +46,7 @@ public class ReadProperty implements TcpPayload, ModbusDeviceMessage {
         log.debug("from byte - {}", HexUtil.encodeHexStr(bytes));
         this.deviceId = Long.parseLong(String.valueOf(bytes[0]));
         funCode = Short.parseShort(String.valueOf(bytes[1]));
-        List<ModbusProductModel> list = ProductModelEnum.INSTANCE.get(deviceId + "-" + this.deviceId);
+        List<ModbusProductModelView> list = ProductModelEnum.INSTANCE.getModbusProductModelList(deviceId + "-" + this.deviceId);
         if (list == null) {
             log.error("找不到【{}】设备对应的物模型", deviceId);
             return;

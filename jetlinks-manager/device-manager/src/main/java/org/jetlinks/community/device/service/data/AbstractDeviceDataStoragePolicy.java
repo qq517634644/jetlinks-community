@@ -2,6 +2,7 @@ package org.jetlinks.community.device.service.data;
 
 import com.alibaba.fastjson.JSON;
 import com.google.common.collect.Maps;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.collections.MapUtils;
 import org.hswebframework.ezorm.core.param.TermType;
@@ -50,6 +51,7 @@ import static org.jetlinks.community.device.timeseries.DeviceTimeSeriesMetric.*;
  * @author zhouhao
  * @since 1.5.0
  */
+@Slf4j
 public abstract class AbstractDeviceDataStoragePolicy implements DeviceDataStoragePolicy {
 
     private final AtomicInteger nanoInc = new AtomicInteger();
@@ -162,6 +164,7 @@ public abstract class AbstractDeviceDataStoragePolicy implements DeviceDataStora
      * @return 二元组
      */
     protected Flux<Tuple2<String, TimeSeriesData>> convertMessageToTimeSeriesData(DeviceMessage message) {
+//        log.error("influxdb2 dbname - {}", message);
         boolean ignoreStorage = message.getHeaderOrDefault(Headers.ignoreStorage);
         boolean ignoreLog = message.getHeaderOrDefault(Headers.ignoreLog);
         if (ignoreStorage && ignoreLog) {
@@ -381,6 +384,7 @@ public abstract class AbstractDeviceDataStoragePolicy implements DeviceDataStora
                             }
                             //没有属性值,可能全部都配置了不存储
                             if (newData.isEmpty()) {
+                                log.warn("newData 为空, 跳过存储");
                                 return Mono.empty();
                             }
                             newData.put("deviceId", message.getDeviceId());
