@@ -6,8 +6,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.hswebframework.web.authorization.annotation.Authorize;
 import org.hswebframework.web.authorization.annotation.Resource;
 import org.hswebframework.web.crud.web.reactive.ReactiveServiceCrudController;
-import org.jetlinks.community.modbus.entity.DeviceCollectConfig;
-import org.jetlinks.community.modbus.service.LocalDeviceCollectConfigService;
+import org.jetlinks.community.modbus.entity.ModbusProductModel;
+import org.jetlinks.community.modbus.service.LocalModbusProductModelService;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -16,17 +16,17 @@ import org.springframework.web.bind.annotation.RestController;
  * @author Tensai
  */
 @RestController
-@RequestMapping({"/modbus-task-config", "/modbus/task/config", "/device-collect-config"})
+@RequestMapping({"/modbus_product_model", "/modbus/product/model"})
 @Authorize(ignore = true)
-@Resource(id = "modbus-task-config", name = "modbus采集-设备配置")
+@Resource(id = "modbus-product-model", name = "modbus产品解析模型")
 @Slf4j
-@Tag(name = "modbus采集-设备配置")
-public class DeviceCollectConfigController implements ReactiveServiceCrudController<DeviceCollectConfig, String> {
+@Tag(name = "modbus产品解析模型")
+public class ModbusProductModelController implements ReactiveServiceCrudController<ModbusProductModel, String> {
 
     @Getter
-    private final LocalDeviceCollectConfigService service;
+    private final LocalModbusProductModelService service;
 
-    public DeviceCollectConfigController(LocalDeviceCollectConfigService service) {
+    public ModbusProductModelController(LocalModbusProductModelService service) {
         this.service = service;
     }
 

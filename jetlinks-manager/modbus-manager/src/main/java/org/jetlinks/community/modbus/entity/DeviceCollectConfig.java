@@ -29,18 +29,22 @@ public class DeviceCollectConfig extends GenericEntity<String> implements Record
     @NotBlank(message = "产品ID不能为空", groups = CreateGroup.class)
     @Schema(description = "产品ID")
     private String productId;
+
     @Comment("设备ID")
     @Column(name = "device_id")
     @Schema(description = "设备ID")
     private String deviceId;
+
     @Comment("执行频率")
     @Column(name = "interval")
     @Schema(description = "执行频率")
     private Long interval;
+
     @Comment("任务开关")
     @Column(name = "task_switch")
     @Schema(description = "任务开关")
     private Boolean taskSwitch;
+
     @Column(name = "creator_id")
     @Comment("创建者id")
     @Schema(description = "创建者ID(只读)")

@@ -3,7 +3,7 @@ server:
 
 spring:
   profiles:
-    active: tensai
+    active: dev
   application:
     name: jetlinks-platform
   jackson:
@@ -193,4 +193,3 @@ springdoc:
         - org.jetlinks.community.logging.controller
   cache:
     disabled: false
-debug: true

@@ -21,7 +21,7 @@ import javax.validation.constraints.Pattern;
  */
 @Getter
 @Setter
-@Table(name = "product_Collect_config")
+@Table(name = "product_collect_config")
 public class ProductCollectConfig extends GenericEntity<String> implements RecordCreationEntity {
 
     @Comment("产品ID")

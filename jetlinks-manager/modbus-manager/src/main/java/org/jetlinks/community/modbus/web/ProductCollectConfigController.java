@@ -17,7 +17,7 @@ import org.springframework.web.bind.annotation.RestController;
  */
 @RestController
 @RequestMapping({"/product-collect-config", "/product/collect/config"})
-@Authorize
+@Authorize(ignore = true)
 @Resource(id = "product-collect-config", name = "modbus采集-产品配置")
 @Slf4j
 @Tag(name = "modbus采集-产品配置")

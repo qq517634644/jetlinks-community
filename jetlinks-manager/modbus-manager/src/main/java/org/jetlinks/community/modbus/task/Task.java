@@ -62,7 +62,7 @@ public class Task {
      */
     @PostConstruct
     public void initCollection() {
-        log.error("当前设备");
+        log.error("初始化Modbus采集");
         // 初始化Modbus采集 设备-产品映射
         // TODO 同步更新表
         deviceCollectConfigService.query(QueryParamEntity.of())
@@ -71,12 +71,14 @@ public class Task {
                 ProductModelEnum.INSTANCE.setDeviceIdMapProductId(it.getDeviceId(), it.getProductId());
             });
 
+        log.error("初始化产品采集配置");
         // 【采集指令】初始化产品采集配置 用于为设备采集提供默认值
         // TODO 同步更新表
         productCollectConfigService.query(QueryParamEntity.of())
             .subscribe(CollectConfigEnum.INSTANCE::put);
 
 
+        log.error("初始化产品采集解析模型");
         // 【数据解析】初始化产品采集
         // TODO 同步更新表
         modbusProductModelService.query(QueryParamEntity.of()).map(ModbusProductModel::mapView)
@@ -112,10 +114,9 @@ public class Task {
 
         // 查询开启采集的设备和默认配置的设备（排除关闭采集的设备）
         deviceCollectConfigService.createQuery().and("task_switch", TermType.not, false).fetch()
-            // 过滤出要执行采集的设备
-            .filter(it -> fluxLong % it.getInterval() != 0)
             // 填充默认值
             .map(it -> {
+                log.error("设备采集配置 - {}", JSON.toJSONString(it));
                 if (it.getInterval() == null) {
                     it.setInterval(CollectConfigEnum.INSTANCE.get(it.getProductId()).getInterval());
                 }
@@ -126,13 +127,16 @@ public class Task {
             })
             // 过滤可以采集的设备
             .filter(DeviceCollectConfig::getTaskSwitch)
+            // 过滤出要执行采集的设备
+            .filter(it -> fluxLong % it.getInterval() == 0)
             .subscribe(it -> {
-                String dtuId = it.getProductId();
-                String slaveId = it.getDeviceId().split("-")[0];
+                String dtuId = it.getDeviceId().split("-")[0];
+                String slaveId = it.getDeviceId().split("-")[1];
                 // 组合slaveId和采集指令
-                String code = shortStringToHex2(slaveId) + CollectConfigEnum.INSTANCE.get(dtuId).getCode();
+                String code = shortStringToHex2(slaveId) + CollectConfigEnum.INSTANCE.get(it.getProductId()).getCode();
                 // 获取完整指令
                 byte[] command = makeCrcCommand(code);
+                log.error("指令生成 - {}-{} - {}", dtuId, slaveId, HexUtil.encodeHexStr(command));
                 // 指令入队
                 CommandEnum.INSTANCE.offerCommand(dtuId, command);
             });
