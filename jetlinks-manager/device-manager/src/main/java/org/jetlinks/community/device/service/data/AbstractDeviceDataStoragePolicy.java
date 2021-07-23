@@ -89,8 +89,8 @@ public abstract class AbstractDeviceDataStoragePolicy implements DeviceDataStora
      * @param message    设备属性消息
      * @param properties 物模型属性
      * @return 数据集合
-     * @see this#convertPropertiesForColumnPolicy(String, DeviceMessage, Map)
-     * @see this#convertPropertiesForRowPolicy(String, DeviceMessage, Map)
+     * @see AbstractDeviceDataStoragePolicy#convertPropertiesForColumnPolicy(String, DeviceMessage, Map)
+     * @see AbstractDeviceDataStoragePolicy#convertPropertiesForRowPolicy(String, DeviceMessage, Map)
      */
     protected abstract Flux<Tuple2<String, TimeSeriesData>> convertProperties(String productId,
                                                                               DeviceMessage message,
@@ -135,6 +135,14 @@ public abstract class AbstractDeviceDataStoragePolicy implements DeviceDataStora
     protected String createDataId(DeviceMessage message) {
         long ts = message.getTimestamp();
         return DigestUtils.md5Hex(String.join("_", message.getDeviceId(), String.valueOf(createUniqueNanoTime(ts))));
+    }
+
+    protected String getDeviceLogMetric(String productId) {
+        return deviceLogMetricId(productId);
+    }
+
+    protected String getDeviceEventMetric(String productId, String eventId) {
+        return deviceEventMetricId(productId, eventId);
     }
 
     protected Mono<Tuple2<String, TimeSeriesData>> createDeviceMessageLog(String productId,
@@ -214,37 +222,45 @@ public abstract class AbstractDeviceDataStoragePolicy implements DeviceDataStora
      * @return 二元组
      */
     protected Mono<Tuple2<String, TimeSeriesData>> convertEventMessageToTimeSeriesData(String productId, EventMessage message) {
-        // 设备注册中心获取设备操作接口
-        // 获取设备元数据 物模型
-        return deviceRegistry
-            .getDevice(message.getDeviceId())
-            .flatMap(device -> device
-                .getMetadata()
-                .map(metadata -> {
-                    Object value = message.getData();
-                    DataType dataType = metadata
-                        .getEvent(message.getEvent())
-                        .map(EventMetadata::getType)
-                        .orElseGet(UnknownType::new);
-                    Object tempValue = ValueTypeTranslator.translator(value, dataType);
-                    Map<String, Object> data;
-                    if (tempValue instanceof Map) {
-                        @SuppressWarnings("all")
-                        Map<String, Object> mapValue = ((Map) tempValue);
-                        int size = mapValue.size();
-                        data = newMap(size);
-                        data.putAll(mapValue);
-                    } else {
-                        data = newMap(16);
-                        data.put("value", tempValue);
-                    }
-                    data.put("id", createDataId(message));
-                    data.put("deviceId", device.getDeviceId());
-                    data.put("createTime", System.currentTimeMillis());
 
-                    return TimeSeriesData.of(TimestampUtils.toMillis(message.getTimestamp()), data);
+        return deviceRegistry
+            .getProduct(productId)
+            .flatMap(product -> product
+                .getMetadata()
+                .<TimeSeriesData>handle((metadata, sink) -> {
+                    if (metadata.getEventOrNull(message.getEvent()) == null) {
+                        log.warn("产品[{}]物模型中未定义事件:{}", productId, message.getEvent());
+                        return;
+                    }
+                    Map<String, Object> data = createEventData(message, metadata);
+                    sink.next(TimeSeriesData.of(TimestampUtils.toMillis(message.getTimestamp()), data));
                 }))
-            .map(data -> Tuples.of(deviceEventMetricId(productId, message.getEvent()), data));
+            .map(data -> Tuples.of(getDeviceEventMetric(productId, message.getEvent()), data));
+    }
+
+    protected Map<String, Object> createEventData(EventMessage message, DeviceMetadata metadata) {
+        Object value = message.getData();
+        DataType dataType = metadata
+            .getEvent(message.getEvent())
+            .map(EventMetadata::getType)
+            .orElseGet(UnknownType::new);
+        Object tempValue = ValueTypeTranslator.translator(value, dataType);
+        Map<String, Object> data;
+        if (tempValue instanceof Map) {
+            @SuppressWarnings("all")
+            Map<String, Object> mapValue = ((Map) tempValue);
+            int size = mapValue.size();
+            data = newMap(size);
+            data.putAll(mapValue);
+        } else {
+            data = newMap(16);
+            data.put("value", tempValue);
+        }
+        data.put("id", createDataId(message));
+        data.put("deviceId", message.getDeviceId());
+        data.put("createTime", System.currentTimeMillis());
+
+        return data;
     }
 
     @Override
@@ -433,7 +449,7 @@ public abstract class AbstractDeviceDataStoragePolicy implements DeviceDataStora
                     .flatMap(entry -> {
                         String id;
                         String property = entry.getT2().getKey();
-                        long ts = propertySourceTimes.getOrDefault(property,message.getTimestamp());
+                        long ts = propertySourceTimes.getOrDefault(property, message.getTimestamp());
                         //忽略存在没有的属性和忽略存储的属性
                         PropertyMetadata propertyMetadata = metadata.getPropertyOrNull(property);
                         if (propertyMetadata == null || propertyIsIgnoreStorage(propertyMetadata)) {
