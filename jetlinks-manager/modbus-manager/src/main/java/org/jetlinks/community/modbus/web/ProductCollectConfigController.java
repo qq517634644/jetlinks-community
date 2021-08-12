@@ -8,8 +8,16 @@ import org.hswebframework.web.authorization.annotation.Resource;
 import org.hswebframework.web.crud.web.reactive.ReactiveServiceCrudController;
 import org.jetlinks.community.modbus.entity.ProductCollectConfig;
 import org.jetlinks.community.modbus.service.LocalProductCollectConfigService;
+import org.jetlinks.core.message.codec.DeviceMessageCodec;
+import org.jetlinks.core.message.codec.MessageCodecDescription;
+import org.jetlinks.core.server.session.DeviceSession;
+import org.jetlinks.core.server.session.DeviceSessionManager;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
+
+import java.util.Objects;
 
 
 /**
@@ -26,9 +34,28 @@ public class ProductCollectConfigController implements ReactiveServiceCrudContro
     @Getter
     private final LocalProductCollectConfigService service;
 
-    public ProductCollectConfigController(LocalProductCollectConfigService service) {
+    @Getter
+    private final DeviceSessionManager deviceSessionManager;
+
+    public ProductCollectConfigController(LocalProductCollectConfigService service, DeviceSessionManager deviceSessionManager) {
         this.service = service;
+        this.deviceSessionManager = deviceSessionManager;
     }
 
 
+    @RequestMapping("test")
+    public Flux<String> test() {
+        return deviceSessionManager.getAllSession().map(DeviceSession::getDeviceId);
+    }
+
+    @RequestMapping("test1")
+    public Mono<String> test1() {
+        DeviceSession deviceSession = deviceSessionManager.getSession("2");
+        assert deviceSession != null;
+        return Objects.requireNonNull(deviceSession.getOperator())
+            .getProtocol()
+            .flatMap(it -> it.getMessageCodec(deviceSession.getTransport()))
+            .flatMap(DeviceMessageCodec::getDescription)
+            .map(MessageCodecDescription::getDescription);
+    }
 }

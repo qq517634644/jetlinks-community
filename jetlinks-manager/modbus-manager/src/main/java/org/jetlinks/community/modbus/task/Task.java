@@ -6,7 +6,6 @@ import com.alibaba.fastjson.JSON;
 import io.netty.buffer.Unpooled;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
-import org.hswebframework.ezorm.core.param.TermType;
 import org.hswebframework.web.api.crud.entity.QueryParamEntity;
 import org.jetlinks.community.modbus.CollectConfigEnum;
 import org.jetlinks.community.modbus.entity.DeviceCollectConfig;
@@ -47,7 +46,10 @@ public class Task {
     @Getter
     private final LocalModbusProductModelService modbusProductModelService;
 
-    public Task(DeviceSessionManager deviceSessionManager, LocalDeviceCollectConfigService modbusTaskConfigService, LocalProductCollectConfigService productCollectConfigStringGenericReactiveCrudService, LocalModbusProductModelService modbusProductModelService) {
+    public Task(DeviceSessionManager deviceSessionManager,
+                LocalDeviceCollectConfigService modbusTaskConfigService,
+                LocalProductCollectConfigService productCollectConfigStringGenericReactiveCrudService,
+                LocalModbusProductModelService modbusProductModelService) {
         this.deviceSessionManager = deviceSessionManager;
         this.deviceCollectConfigService = modbusTaskConfigService;
         this.productCollectConfigService = productCollectConfigStringGenericReactiveCrudService;
@@ -113,10 +115,13 @@ public class Task {
     private void codeProvider(long fluxLong) {
 
         // 查询开启采集的设备和默认配置的设备（排除关闭采集的设备）
-        deviceCollectConfigService.createQuery().and("task_switch", TermType.not, false).fetch()
+        deviceCollectConfigService.createQuery()
+//            .or("task_switch", TermType.eq, true)
+//            .or("task_switch", TermType.isnull, null)
+            .fetch()
             // 填充默认值
             .map(it -> {
-                log.error("设备采集配置 - {}", JSON.toJSONString(it));
+//                log.error("设备采集配置 - {}", JSON.toJSONString(it));
                 if (it.getInterval() == null) {
                     it.setInterval(CollectConfigEnum.INSTANCE.get(it.getProductId()).getInterval());
                 }
@@ -136,7 +141,7 @@ public class Task {
                 String code = shortStringToHex2(slaveId) + CollectConfigEnum.INSTANCE.get(it.getProductId()).getCode();
                 // 获取完整指令
                 byte[] command = makeCrcCommand(code);
-                log.error("指令生成 - {}-{} - {}", dtuId, slaveId, HexUtil.encodeHexStr(command));
+//                log.error("指令生成 - {}-{} - {}", dtuId, slaveId, HexUtil.encodeHexStr(command));
                 // 指令入队
                 CommandEnum.INSTANCE.offerCommand(dtuId, command);
             });

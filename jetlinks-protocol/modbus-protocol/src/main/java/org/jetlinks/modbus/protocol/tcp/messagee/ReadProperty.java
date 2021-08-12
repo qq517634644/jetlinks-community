@@ -32,10 +32,6 @@ public class ReadProperty implements TcpPayload, ModbusDeviceMessage {
      */
     private short funCode;
 
-    private double humidity;
-
-    private double temperature;
-
     @Override
     public byte[] toBytes() {
         return new byte[0];
@@ -59,6 +55,9 @@ public class ReadProperty implements TcpPayload, ModbusDeviceMessage {
 //            log.info("value - {}", HexUtil.encodeHexStr(byteValue));
             // 解算字节码
             Number value;
+            // TODO 有符号 无符号
+            // TODO 前置脚本
+            // 默认小端序【hutool】其实实际上是大端序
             switch (length) {
                 case 1:
                     value = Convert.byteToUnsignedInt(byteValue[0]);
@@ -68,6 +67,9 @@ public class ReadProperty implements TcpPayload, ModbusDeviceMessage {
                     break;
                 case 4:
                     value = Convert.bytesToInt(byteValue);
+                    break;
+                case 8:
+                    value = Convert.bytesToLong(byteValue);
                     break;
                 default:
                     value = 0;
@@ -99,6 +101,7 @@ public class ReadProperty implements TcpPayload, ModbusDeviceMessage {
                     properties.put(it.getMetricCode(), 0);
                     break;
             }
+            // TODO 后置脚本
 
         });
 //        byte[] humidityBytes = new byte[2];

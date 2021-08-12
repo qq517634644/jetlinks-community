@@ -41,4 +41,14 @@ public class ModbusProductModelView {
      * 数据类型
      */
     private final DataType dataType;
+
+    /**
+     * 前置JS处理
+     */
+    private final String preScript = null;
+
+    /**
+     * 后置JS处理
+     */
+    private final String postScript = null;
 }

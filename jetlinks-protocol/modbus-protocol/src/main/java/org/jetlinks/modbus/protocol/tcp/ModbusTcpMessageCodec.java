@@ -17,6 +17,7 @@ import org.jetlinks.core.message.property.ReadPropertyMessage;
 import org.jetlinks.core.message.property.ReadPropertyMessageReply;
 import org.jetlinks.core.message.property.ReportPropertyMessage;
 import org.jetlinks.core.message.property.WritePropertyMessage;
+import org.jetlinks.core.metadata.ConfigMetadata;
 import org.jetlinks.core.server.session.DeviceSession;
 import org.jetlinks.modbus.protocol.tcp.command.CommandEnum;
 import org.jetlinks.modbus.protocol.tcp.messagee.ErrorMessage;
@@ -27,6 +28,7 @@ import org.reactivestreams.Publisher;
 import reactor.core.publisher.Mono;
 
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import java.util.Arrays;
 
 /**
@@ -228,9 +230,46 @@ public class ModbusTcpMessageCodec implements DeviceMessageCodec {
     @Nonnull
     @Override
     public Publisher<? extends EncodedMessage> encode(@Nonnull MessageEncodeContext context) {
-        return null;
+        log.info("功能测试 - {}", JSON.toJSONString(context));
+        Message message = context.getMessage();
+        EncodedMessage encodedMessage = null;
+        log.info("推送设备消息，消息ID：{}", message.getMessageId());
+        // 获取设备属性
+        if (message instanceof ReadPropertyMessage) {
+            log.info("ReportPropertyMessage");
+        }
+        //修改设备属性
+        if (message instanceof WritePropertyMessage) {
+            log.info("ReportPropertyMessage");
+        }
+        // 设备上报属性
+        if (message instanceof ReportPropertyMessage) {
+            log.info("ReportPropertyMessage");
+        }
+        encodedMessage = EncodedMessage.simple(Unpooled.wrappedBuffer(new byte[]{0x09, 0x03, 0x00, 0x00, 0x00, 0x02, (byte) 0xc5, 0x43}));
+        return encodedMessage != null ? Mono.just(encodedMessage) : Mono.empty();
     }
 
+    /**
+     * 获取协议描述
+     *
+     * @return 协议描述
+     */
+    @Override
+    public Mono<? extends MessageCodecDescription> getDescription() {
+        return Mono.just(new MessageCodecDescription() {
+            @Override
+            public String getDescription() {
+                return "Modbus";
+            }
+
+            @Nullable
+            @Override
+            public ConfigMetadata getConfigMetadata() {
+                return null;
+            }
+        });
+    }
 
     private String getDtuId(long dtuId) {
         return String.valueOf(dtuId);

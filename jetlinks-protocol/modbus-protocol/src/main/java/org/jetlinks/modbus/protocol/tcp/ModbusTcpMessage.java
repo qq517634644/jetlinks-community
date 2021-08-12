@@ -37,6 +37,11 @@ public class ModbusTcpMessage {
         return ModbusTcpMessage.of(type, type.read(payload, 0, deviceId));
     }
 
+    /**
+     * 生成设备指令
+     *
+     * @return 设备指令
+     */
     public ByteBuf toByteBuf() {
         return Unpooled.wrappedBuffer(toBytes());
     }

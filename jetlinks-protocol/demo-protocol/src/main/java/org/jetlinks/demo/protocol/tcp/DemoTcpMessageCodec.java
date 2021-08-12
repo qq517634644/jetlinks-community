@@ -13,11 +13,13 @@ import org.jetlinks.core.message.codec.*;
 import org.jetlinks.core.message.property.ReadPropertyMessage;
 import org.jetlinks.core.message.property.ReportPropertyMessage;
 import org.jetlinks.core.message.property.WritePropertyMessage;
+import org.jetlinks.core.metadata.ConfigMetadata;
 import org.jetlinks.core.server.session.DeviceSession;
 import org.jetlinks.demo.protocol.tcp.message.*;
 import org.reactivestreams.Publisher;
 import reactor.core.publisher.Mono;
 
+import javax.annotation.Nullable;
 import java.util.Arrays;
 
 @AllArgsConstructor
@@ -130,5 +132,26 @@ public class DemoTcpMessageCodec implements DeviceMessageCodec {
             encodedMessage = EncodedMessage.simple(of.toByteBuf());
         }
         return encodedMessage != null ? Mono.just(encodedMessage) : Mono.empty();
+    }
+
+    /**
+     * 获取协议描述
+     *
+     * @return 协议描述
+     */
+    @Override
+    public Mono<? extends MessageCodecDescription> getDescription() {
+        return Mono.just(new MessageCodecDescription() {
+            @Override
+            public String getDescription() {
+                return "demo";
+            }
+
+            @Nullable
+            @Override
+            public ConfigMetadata getConfigMetadata() {
+                return null;
+            }
+        });
     }
 }
