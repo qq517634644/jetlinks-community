@@ -56,8 +56,8 @@ public abstract class Influxdb2DeviceDataStoragePolicy extends AbstractDeviceDat
     protected Mono<Void> doSaveData(String metric, TimeSeriesData data) {
 //        log.info("doSaveData1 >>> metric - {},data - {}", metric, JSON.toJSONString(data));
         Point point = convertTs2Influx(metric, data);
-        manager.save(point);
-        return Mono.empty();
+//        log.info("doSaveData1 >|> metric - {},data - {}", metric, JSON.toJSONString(point));
+        return manager.save(point);
     }
 
     @Override
@@ -88,7 +88,7 @@ public abstract class Influxdb2DeviceDataStoragePolicy extends AbstractDeviceDat
                 .collectList(),
             manager.queryInfluxData(getLimitFlux(metric, paramEntity))
                 .map(
-                    data -> (TimeSeriesData) new SimpleTimeSeriesData(data.getTime(), data.getAll())
+                    data -> (TimeSeriesData) new SimpleTimeSeriesData(data.getTime(), data.getValues())
                 ).map(mapper)
                 .collectList(),
             (cou, res) -> PagerResult.of(getTotal(cou), res, paramEntity));
@@ -130,6 +130,13 @@ public abstract class Influxdb2DeviceDataStoragePolicy extends AbstractDeviceDat
             .count().yield("count");
     }
 
+    /**
+     * 查询数据条目数
+     *
+     * @param metric 表名
+     * @param param  参数名
+     * @return Flux查询
+     */
     protected com.influxdb.query.dsl.Flux getCountFlux(String metric, QueryParamEntity param) {
         return baseFlux(metric, param)
             .count().yield("count");
@@ -158,8 +165,16 @@ public abstract class Influxdb2DeviceDataStoragePolicy extends AbstractDeviceDat
             );
     }
 
+    /**
+     * 分页查询
+     *
+     * @param metric 表名
+     * @param param  参数
+     * @return Flux语法
+     */
     protected com.influxdb.query.dsl.Flux getLimitFlux(String metric, QueryParamEntity param) {
         return baseFlux(metric, param)
+            .pivot(new String[]{"_time"}, new String[]{"_field"}, "_value")
             .limit(param.getPageSize(),
                 (param.getPageIndex() - param.getFirstPageIndex()) * param.getPageSize()
             );
@@ -179,6 +194,13 @@ public abstract class Influxdb2DeviceDataStoragePolicy extends AbstractDeviceDat
             .filter(Restrictions.field().equal(property));
     }
 
+    /**
+     * @param productId
+     * @param properties
+     * @param deviceId
+     * @param param
+     * @return
+     */
     protected com.influxdb.query.dsl.Flux getFlux(String productId, Set<String> properties, String deviceId, QueryParamEntity param) {
         com.influxdb.query.dsl.Flux flux = baseFlux(productId, deviceId, param);
         List<Restrictions> fieldList = new ArrayList<>();
@@ -187,10 +209,18 @@ public abstract class Influxdb2DeviceDataStoragePolicy extends AbstractDeviceDat
         return flux;
     }
 
+    /**
+     * 指标查询
+     *
+     * @param productId 产品ID
+     * @param deviceId  设备ID
+     * @param param     查询参数
+     * @return flux查询
+     */
     protected com.influxdb.query.dsl.Flux baseFlux(String productId, String deviceId, QueryParamEntity param) {
         com.influxdb.query.dsl.Flux flux = com.influxdb.query.dsl.Flux
             .from(influxdb2Properties.getBucket())
-            // TODO 完善
+            // TODO 完善时间
             .range(Instant.now().plus(-6, ChronoUnit.HOURS))
             .filter(Restrictions.measurement().equal("properties_" + productId))
             .filter(Restrictions.tag("deviceId").equal(deviceId));
@@ -198,15 +228,22 @@ public abstract class Influxdb2DeviceDataStoragePolicy extends AbstractDeviceDat
         return flux;
     }
 
+    /**
+     * 基础查询
+     *
+     * @param metric 表名
+     * @param param  查询参数
+     * @return flux查询
+     */
     protected com.influxdb.query.dsl.Flux baseFlux(String metric, QueryParamEntity param) {
         com.influxdb.query.dsl.Flux flux = com.influxdb.query.dsl.Flux
             .from(influxdb2Properties.getBucket())
-            // TODO 完善
+            // TODO 完善时间参数
             .range(Instant.now().plus(-6, ChronoUnit.HOURS))
             .filter(Restrictions.measurement().equal(metric));
         Map<String, List<Restrictions>> fieldListMap = new HashMap<>(16);
         param.getTerms().forEach(term -> {
-            // TODO
+            // TODO 条件过滤
             switch (term.getTermType()) {
                 case "eq":
                     fieldListMap.computeIfAbsent(term.getColumn(), r -> new ArrayList<>())

@@ -59,11 +59,13 @@ public class Influxdb2ColumnDeviceDataStoragePolicy extends Influxdb2DeviceDataS
         Map<String, String> tags = new HashMap<>(8);
         Map<String, Object> fields = new HashMap<>(16);
         data.getData().forEach((k, v) -> {
-            if ("messageId".equals(k) || "productId".equals(k) || "id".equals(k) || "createTime".equals(k) || "timestamp".equals(k)) {
+            if ("messageId".equals(k) || "productId".equals(k) || "id".equals(k) || "createTime".equals(k)
+                || "timestamp".equals(k)) {
 
-            } else if ("deviceId".equals(k)) {
+            } else if ("deviceId".equals(k) || "type".equals(k)) {
                 tags.put(k, String.valueOf(v));
             } else {
+                // 事件上报中所有字段全是tag
                 if (metric.startsWith("event_")) {
                     tags.put(k, String.valueOf(v));
                     fields.put("value", 1);
