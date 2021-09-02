@@ -23,7 +23,6 @@ import org.springframework.stereotype.Component;
 import reactor.core.publisher.Flux;
 import reactor.core.scheduler.Schedulers;
 
-import javax.annotation.PostConstruct;
 import java.time.Duration;
 
 /**
@@ -60,9 +59,8 @@ public class Task {
     /**
      * 构建设备ID和产品ID的映射
      *
-     * @return Void
      */
-    @PostConstruct
+//    @PostConstruct
     public void initCollection() {
         log.error("初始化Modbus采集");
         // 初始化Modbus采集 设备-产品映射

@@ -47,6 +47,11 @@
 			<artifactId>modbus-protocol</artifactId>
 			<version>1.11.0-SNAPSHOT</version>
 		</dependency>
+		<dependency>
+			<groupId>org.jetlinks.community</groupId>
+			<artifactId>zlan-protocol</artifactId>
+			<version>1.11.0-SNAPSHOT</version>
+		</dependency>
 	</dependencies>
 
 </project>
