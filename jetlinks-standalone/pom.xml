@@ -66,12 +66,7 @@
         </dependency>
 	    <dependency>
 		    <groupId>org.jetlinks.community</groupId>
-		    <artifactId>demo-protocol</artifactId>
-		    <version>${project.version}</version>
-	    </dependency>
-	    <dependency>
-		    <groupId>org.jetlinks.community</groupId>
-		    <artifactId>modbus-protocol</artifactId>
+		    <artifactId>jetlinks-protocol</artifactId>
 		    <version>${project.version}</version>
 	    </dependency>
 	    <dependency>
