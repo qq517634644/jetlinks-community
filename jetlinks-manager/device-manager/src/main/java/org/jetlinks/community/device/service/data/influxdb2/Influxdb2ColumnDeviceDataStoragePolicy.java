@@ -62,7 +62,7 @@ public class Influxdb2ColumnDeviceDataStoragePolicy extends Influxdb2DeviceDataS
             if ("messageId".equals(k) || "productId".equals(k) || "id".equals(k) || "createTime".equals(k)
                 || "timestamp".equals(k)) {
 
-            } else if ("deviceId".equals(k) || "type".equals(k)) {
+            } else if ("deviceId".equals(k)) {
                 tags.put(k, String.valueOf(v));
             } else {
                 // 事件上报中所有字段全是tag
@@ -133,12 +133,6 @@ public class Influxdb2ColumnDeviceDataStoragePolicy extends Influxdb2DeviceDataS
                     return deviceProperty;
                 }
             );
-//        return param
-//            .toQuery()
-//            .includes(property.keySet().toArray(new String[0]))
-//            .where("deviceId", deviceId)
-//            .execute(q -> timeSeriesManager.getService(getPropertyTimeSeriesMetric(productId)).query(q))
-//            .flatMap(data -> rowToProperty(data, property.values()));
     }
 
     @Nonnull

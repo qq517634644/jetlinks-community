@@ -100,6 +100,15 @@ public abstract class AbstractDeviceDataStoragePolicy implements DeviceDataStora
                                            QueryParamEntity paramEntity,
                                            Function<TimeSeriesData, T> mapper);
 
+    /**
+     * 设备日志
+     *
+     * @param metric      一般用作Influxdb的表名
+     * @param paramEntity 查询参数
+     * @param mapper      数据映射
+     * @param <T>         映射类
+     * @return 分也结果
+     */
     protected abstract <T> Mono<PagerResult<T>> doQueryPager(String metric,
                                                              QueryParamEntity paramEntity,
                                                              Function<TimeSeriesData, T> mapper);

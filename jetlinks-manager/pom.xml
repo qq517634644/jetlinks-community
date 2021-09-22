@@ -20,6 +20,7 @@
         <module>logging-manager</module>
         <module>rule-engine-manager</module>
         <module>visualization-manager</module>
+	    <module>zlan-manager</module>
     </modules>
 
 </project>

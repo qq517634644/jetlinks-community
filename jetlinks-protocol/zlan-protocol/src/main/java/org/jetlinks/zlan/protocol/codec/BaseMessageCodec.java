@@ -93,6 +93,7 @@ public class BaseMessageCodec {
                 .filter(it -> it.getStatus() == 1)
                 .map(it -> {
                     // 只发送在线设备的数据
+                    it.deriveData();
                     ChildDeviceMessage childDeviceMessage = new ChildDeviceMessage();
                     childDeviceMessage.setDeviceId(message.getId());
                     childDeviceMessage.setChildDeviceId(it.getId());

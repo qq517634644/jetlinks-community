@@ -142,6 +142,8 @@ logging:
     org.jetlinks.pro.influx: trace
     org.elasticsearch: error
     org.elasticsearch.deprecation.search.aggregations.bucket.histogram: error
+    org.jetlinks.zlan.protocol: debug
+    org.jetlinks.community.zlan: debug
   config: classpath:logback-spring.xml
 vertx:
   max-event-loop-execute-time-unit: seconds
