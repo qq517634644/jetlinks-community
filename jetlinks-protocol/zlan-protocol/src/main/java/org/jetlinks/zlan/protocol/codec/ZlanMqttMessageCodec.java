@@ -8,15 +8,20 @@ import org.jetlinks.core.message.Message;
 import org.jetlinks.core.message.codec.*;
 import org.jetlinks.core.message.function.FunctionInvokeMessage;
 import org.jetlinks.core.message.property.ReadPropertyMessage;
+import org.jetlinks.core.message.property.ReadPropertyMessageReply;
 import org.jetlinks.core.message.property.ReportPropertyMessage;
 import org.jetlinks.core.message.property.WritePropertyMessage;
 import org.jetlinks.core.server.session.DeviceSession;
 import org.jetlinks.zlan.protocol.message.MessageType;
 import org.jetlinks.zlan.protocol.message.ZlanMessagePack;
+import org.jetlinks.zlan.protocol.temp.DeviceProperties;
 import org.reactivestreams.Publisher;
 import reactor.core.publisher.Mono;
 
 import javax.annotation.Nonnull;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 /**
  * @author Tensai
@@ -73,6 +78,33 @@ public class ZlanMqttMessageCodec extends BaseMessageCodec implements DeviceMess
         // 获取设备属性
         if (message instanceof ReadPropertyMessage) {
             log.info("ReadPropertyMessage");
+            ReadPropertyMessage readPropertyMessage = (ReadPropertyMessage) message;
+            log.info(JSON.toJSONString(readPropertyMessage));
+
+            String deviceId = readPropertyMessage.getDeviceId();
+            String messageId = readPropertyMessage.getMessageId();
+            List<String> properties = readPropertyMessage.getProperties();
+
+            ReadPropertyMessageReply readPropertyMessageReply = new ReadPropertyMessageReply();
+            readPropertyMessageReply.setDeviceId(deviceId);
+            readPropertyMessageReply.setMessageId(messageId);
+            Map<String, Object> propertiesMap = new HashMap<>(8);
+            Map<String, Long> propertySourceTimes = new HashMap<>(8);
+            Map<String, String> propertyStates = new HashMap<>(8);
+            DeviceProperties.LAST.getAllProperties(deviceId).forEach((k, v) -> {
+                if (properties.contains(k)) {
+                    propertiesMap.put(k, v);
+                    propertySourceTimes.put(k, System.currentTimeMillis());
+                    propertyStates.put(k, "success");
+                }
+            });
+            readPropertyMessageReply.setProperties(propertiesMap);
+            readPropertyMessageReply.setPropertySourceTimes(propertySourceTimes);
+            readPropertyMessageReply.setPropertyStates(propertyStates);
+            log.info(JSON.toJSONString(readPropertyMessage));
+            return context
+                .reply(readPropertyMessageReply)
+                .then(Mono.empty());
         }
         //修改设备属性
         if (message instanceof WritePropertyMessage) {
@@ -81,6 +113,8 @@ public class ZlanMqttMessageCodec extends BaseMessageCodec implements DeviceMess
         // 设备上报属性
         if (message instanceof ReportPropertyMessage) {
             log.info("ReportPropertyMessage");
+            ReportPropertyMessage reportPropertyMessage = (ReportPropertyMessage) message;
+            log.info(JSON.toJSONString(reportPropertyMessage));
         }
 
         if (message instanceof FunctionInvokeMessage) {

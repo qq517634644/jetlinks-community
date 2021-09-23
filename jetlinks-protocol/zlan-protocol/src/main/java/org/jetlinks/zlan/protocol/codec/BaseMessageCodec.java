@@ -66,7 +66,6 @@ public class BaseMessageCodec {
             .concatWith(report(message));
     }
 
-
     /**
      * 属性上报
      *

@@ -32,22 +32,19 @@ public class ChildMessagePack {
             Map<String, Object> temp = new HashMap<>(4);
             data.forEach((k, v) -> {
                 if (k.startsWith("total_")) {
-                    Map<String, BigDecimal> lastMap = DeviceProperties.LAST.getProperties(id);
+                    Map<String, BigDecimal> lastMap = DeviceProperties.LAST.getTotalProperties(id);
                     if (lastMap != null) {
                         if (lastMap.get(k) != null) {
                             String stepKey = k.replace("total", "step");
                             BigDecimal stepValue = ((BigDecimal) v).subtract(lastMap.get(k));
                             temp.put(stepKey, stepValue);
                         }
-                        lastMap.forEach((x, y) -> {
-                            log.info("LastMap {} --> {}", x, y);
-                        });
                     }
-                    log.info("data {} --> {}", k, v);
-                    DeviceProperties.LAST.setProperties(id, k, (BigDecimal) v);
+                    DeviceProperties.LAST.setTotalProperties(id, k, (BigDecimal) v);
                 }
             });
             data.putAll(temp);
+            DeviceProperties.LAST.setAllProperties(id, data);
         }
     }
 }
