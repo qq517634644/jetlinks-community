@@ -5,7 +5,7 @@
     <parent>
         <artifactId>jetlinks-community</artifactId>
         <groupId>org.jetlinks.community</groupId>
-        <version>1.11.0-SNAPSHOT</version>
+        <version>1.12.0-SNAPSHOT</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
     <modelVersion>4.0.0</modelVersion>
@@ -250,6 +250,11 @@
             <version>2.0.8</version>
         </dependency>
 
+        <dependency>
+            <groupId>org.jetlinks.community</groupId>
+            <artifactId>configure-component</artifactId>
+            <version>${project.version}</version>
+        </dependency>
     </dependencies>
 
 

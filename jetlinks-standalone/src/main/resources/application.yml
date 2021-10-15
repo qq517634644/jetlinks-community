@@ -31,6 +31,8 @@ spring:
     pool:
       max-size: 32
       max-idle-time: 2m # 值不能大于mysql server的wait_timeout配置
+      max-life-time: 10m
+      acquire-retry: 3
   reactor:
     debug-agent:
       enabled: false
@@ -132,7 +134,6 @@ logging:
     org.jetlinks.supports.event: warn
     org.springframework: warn
     org.jetlinks.community.device.message.writer: warn
-    org.jetlinks.community.rule.engine.device: error
     org.jetlinks.community.timeseries.micrometer: warn
     org.jetlinks.community.elastic.search.service: trace
     org.jetlinks.community.elastic.search.service.reactive: trace
@@ -143,8 +144,6 @@ logging:
     org.jetlinks.pro.influx: trace
     org.elasticsearch: error
     org.elasticsearch.deprecation.search.aggregations.bucket.histogram: error
-    org.jetlinks.zlan.protocol: debug
-    org.jetlinks.community.zlan: debug
   config: classpath:logback-spring.xml
 vertx:
   max-event-loop-execute-time-unit: seconds
