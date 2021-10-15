@@ -49,6 +49,10 @@ public enum DeviceProperties {
         return allPropertiesMap.computeIfAbsent(key, k -> new HashMap<>());
     }
 
+    public void removeAllProperties(String key) {
+        allPropertiesMap.remove(key);
+    }
+
     public void initMap(String key, Map<String, BigDecimal> value) {
         totalMap.put(key, value);
     }

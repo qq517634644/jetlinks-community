@@ -1,11 +1,9 @@
 package org.jetlinks.community.zlan.controller;
 
 import com.alibaba.fastjson.JSON;
-import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.hswebframework.web.authorization.annotation.Authorize;
-import org.hswebframework.web.authorization.annotation.Resource;
 import org.jetlinks.zlan.protocol.temp.DeviceProperties;
 import org.springframework.data.redis.core.ReactiveRedisOperations;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -34,7 +32,7 @@ public class TestController {
             log.info("{} --> {}", it.getKey(), it.getValue());
             DeviceProperties.LAST.initMap(it.getKey(), JSON.parseObject(it.getValue(), HashMap.class));
         });
-        DeviceProperties.LAST.getMap().forEach((k, v) -> {
+        DeviceProperties.LAST.getTotalMap().forEach((k, v) -> {
             log.info("key --> {}", k);
             v.forEach((mk, mv) -> {
                 log.info("value ==> {} --> {}", mk, mv);

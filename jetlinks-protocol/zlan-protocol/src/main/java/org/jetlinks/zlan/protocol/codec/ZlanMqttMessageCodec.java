@@ -102,6 +102,7 @@ public class ZlanMqttMessageCodec extends BaseMessageCodec implements DeviceMess
             readPropertyMessageReply.setPropertySourceTimes(propertySourceTimes);
             readPropertyMessageReply.setPropertyStates(propertyStates);
             log.info(JSON.toJSONString(readPropertyMessage));
+            DeviceProperties.LAST.removeAllProperties(deviceId);
             return context
                 .reply(readPropertyMessageReply)
                 .then(Mono.empty());
