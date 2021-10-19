@@ -27,6 +27,7 @@ import org.jetlinks.core.server.monitor.GatewayServerMonitor;
 import org.jetlinks.core.server.session.DeviceSessionManager;
 import org.jetlinks.core.spi.ServiceContext;
 import org.jetlinks.supports.cluster.ClusterDeviceRegistry;
+import org.jetlinks.supports.cluster.EventBusDeviceOperationBroker;
 import org.jetlinks.supports.cluster.redis.RedisClusterManager;
 import org.jetlinks.supports.config.EventBusStorageManager;
 import org.jetlinks.supports.event.BrokerEventBus;
@@ -83,9 +84,9 @@ public class JetLinksConfiguration {
         return new BrokerEventBus();
     }
 
-    @Bean
-    public StandaloneDeviceMessageBroker standaloneDeviceMessageBroker() {
-        return new StandaloneDeviceMessageBroker();
+    @Bean(initMethod = "start", destroyMethod = "dispose")
+    public EventBusDeviceOperationBroker eventBusDeviceOperationBroker(ClusterManager clusterManager,EventBus eventBus) {
+        return new EventBusDeviceOperationBroker(clusterManager.getCurrentServerId(),eventBus);
     }
 
     @Bean
