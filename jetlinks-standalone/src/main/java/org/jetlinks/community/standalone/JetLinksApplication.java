@@ -11,7 +11,6 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.autoconfigure.elasticsearch.ElasticsearchRestClientAutoConfiguration;
 import org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration;
 import org.springframework.cache.annotation.EnableCaching;
-import org.springframework.context.annotation.Profile;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 
@@ -33,7 +32,7 @@ public class JetLinksApplication {
         SpringApplication.run(JetLinksApplication.class, args);
     }
 
-    @Profile("dev")
+//    @Profile("dev")
     @Component
     @Slf4j
     public static class AdminAllAccess {
