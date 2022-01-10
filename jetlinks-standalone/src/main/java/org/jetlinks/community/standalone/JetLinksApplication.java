@@ -37,12 +37,6 @@ public class JetLinksApplication {
     @Slf4j
     public static class AdminAllAccess {
 
-        @PostConstruct
-        public void init() {
-            // TODO: 2020/1/4 严重影响性能，谨慎开启
-            // Hooks.onOperatorDebug();
-        }
-
         @EventListener
         public void handleAuthEvent(AuthorizingHandleBeforeEvent e) {
             //admin用户拥有所有权限
