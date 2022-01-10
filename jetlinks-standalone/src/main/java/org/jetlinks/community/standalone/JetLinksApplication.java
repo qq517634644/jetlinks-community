@@ -32,7 +32,7 @@ public class JetLinksApplication {
         SpringApplication.run(JetLinksApplication.class, args);
     }
 
-//    @Profile("dev")
+    //    @Profile("dev")
     @Component
     @Slf4j
     public static class AdminAllAccess {

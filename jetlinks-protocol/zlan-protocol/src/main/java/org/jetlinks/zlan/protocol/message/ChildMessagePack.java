@@ -20,6 +20,11 @@ public class ChildMessagePack {
 
     private String id;
 
+    /**
+     * 1 - 在线
+     * 0 - 离线
+     * -1 - 数据异常
+     */
     private Integer status;
 
     private Map<String, Object> data;
@@ -38,6 +43,9 @@ public class ChildMessagePack {
                             String stepKey = k.replace("total", "step");
                             BigDecimal stepValue = ((BigDecimal) v).subtract(lastMap.get(k));
                             temp.put(stepKey, stepValue);
+                            if (stepValue.doubleValue() < 0) {
+                                status = -1;
+                            }
                         }
                     }
                     DeviceProperties.LAST.setTotalProperties(id, k, (BigDecimal) v);
