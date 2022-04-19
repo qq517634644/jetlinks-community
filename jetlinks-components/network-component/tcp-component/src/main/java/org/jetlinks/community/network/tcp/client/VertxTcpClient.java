@@ -39,7 +39,7 @@ public class VertxTcpClient implements TcpClient {
     public NetSocket socket;
     volatile PayloadParser payloadParser;
     @Setter
-    private long keepAliveTimeoutMs = Duration.ofMinutes(10).toMillis();
+    private long keepAliveTimeoutMs = Duration.ofSeconds(30).toMillis();
     private volatile long lastKeepAliveTime = System.currentTimeMillis();
 
     public VertxTcpClient(String id, boolean serverClient) {

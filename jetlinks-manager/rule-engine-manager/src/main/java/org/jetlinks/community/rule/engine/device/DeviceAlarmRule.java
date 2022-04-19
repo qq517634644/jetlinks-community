@@ -4,6 +4,7 @@ import io.swagger.v3.oas.annotations.Hidden;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.jetlinks.community.rule.engine.model.Action;
 import org.jetlinks.core.message.DeviceMessage;
@@ -91,6 +92,14 @@ public class DeviceAlarmRule implements Serializable {
      */
     @Schema(description = "防抖限制")
     private ShakeLimit shakeLimit;
+
+    @Schema(description = "告警级别")
+    @Hidden
+    private Integer level;
+
+    @Schema(description = "告警类别")
+    @Hidden
+    private String type;
 
     public void validate() {
         if (org.apache.commons.collections.CollectionUtils.isEmpty(getTriggers())) {
@@ -208,7 +217,7 @@ public class DeviceAlarmRule implements Serializable {
         private List<FunctionParameter> parameters;
 
         //物模型属性或者事件的标识 如: fire_alarm
-        @Schema(description = "物模型表示,如:属性ID,事件ID")
+        @Schema(description = "物模型标识,如:属性ID,事件ID")
         private String modelId;
 
         //过滤条件
@@ -216,23 +225,29 @@ public class DeviceAlarmRule implements Serializable {
         private List<ConditionFilter> filters;
 
         public Set<String> toColumns() {
+            Set<String> columns = new LinkedHashSet<>();
+            columns.add(type.getPropertyPrefix() + "this $this");
 
-            return Stream.concat(
-                (StringUtils.hasText(modelId)
-                    ? Collections.singleton(type.getPropertyPrefix() + "this['" + modelId + "'] \"" + modelId + "\"")
-                    : Collections.<String>emptySet()).stream(),
-                (CollectionUtils.isEmpty(filters)
-                    ? Stream.<ConditionFilter>empty()
-                    : filters.stream())
-                    .map(filter -> filter.getColumn(type)))
-                .collect(Collectors.toSet());
+            if (StringUtils.hasText(modelId)) {
+                //this.properties.this['temp'] temp
+                columns.add(
+                    type.getPropertyPrefix() + "this['" + modelId + "'] \"" + modelId + "\""
+                );
+            }
+            if (!CollectionUtils.isEmpty(filters)) {
+                for (ConditionFilter filter : filters) {
+                    columns.add(filter.getColumn(type));
+                }
+            }
+
+            return columns;
         }
 
         public List<Object> toFilterBinds() {
             return filters == null ? Collections.emptyList() :
                 filters.stream()
-                    .map(ConditionFilter::convertValue)
-                    .collect(Collectors.toList());
+                       .map(ConditionFilter::convertValue)
+                       .collect(Collectors.toList());
         }
 
         public Optional<String> createExpression() {
@@ -241,9 +256,48 @@ public class DeviceAlarmRule implements Serializable {
             }
             return Optional.of(
                 filters.stream()
-                    .map(filter -> filter.createExpression(type))
-                    .collect(Collectors.joining(" and "))
+                       .map(filter -> filter.createExpression(type))
+                       .collect(Collectors.joining(" and "))
             );
+        }
+
+        public String toSQL(int index, List<String> defaultColumns, List<DeviceAlarmRule.Property> properties) {
+            List<String> columns = new ArrayList<>(defaultColumns);
+            List<String> wheres = new ArrayList<>();
+
+            // select this.properties.this trigger0
+            columns.add(getType().getPropertyPrefix() + "this trigger" + index);
+            columns.addAll(toColumns());
+            createExpression()
+                .ifPresent(expr -> wheres.add("(" + expr + ")"));
+
+            String sql = "select \n\t\t" + String.join("\n\t\t,", columns) + " \n\tfrom dual ";
+
+            if (!wheres.isEmpty()) {
+                sql += "\n\twhere " + String.join("\n\t\t or ", wheres);
+            }
+
+            if (org.apache.commons.collections.CollectionUtils.isNotEmpty(properties)) {
+                List<String> newColumns = new ArrayList<>(defaultColumns);
+                for (DeviceAlarmRule.Property property : properties) {
+                    if (StringUtils.isEmpty(property.getProperty())) {
+                        continue;
+                    }
+                    String alias = StringUtils.hasText(property.getAlias()) ? property.getAlias() : property.getProperty();
+                    // 'message',func(),this[name]
+                    if ((property.getProperty().startsWith("'") && property.getProperty().endsWith("'"))
+                        ||
+                        property.getProperty().contains("(") || property.getProperty().contains("[")) {
+                        newColumns.add(property.getProperty() + " \"" + alias + "\"");
+                    } else {
+                        newColumns.add("this['" + property.getProperty() + "'] \"" + alias + "\"");
+                    }
+                }
+                if (newColumns.size() > defaultColumns.size()) {
+                    sql = "select \n\t" + String.join("\n\t,", newColumns) + "\n from (\n\t" + sql + "\n) t";
+                }
+            }
+            return sql;
         }
 
         public void validate() {
@@ -271,34 +325,10 @@ public class DeviceAlarmRule implements Serializable {
         }
     }
 
-    /**
-     * 抖动限制
-     * <a href="https://github.com/jetlinks/jetlinks-community/issues/8">https://github.com/jetlinks/jetlinks-community/issues/8</a>
-     *
-     * @since 1.3
-     */
     @Getter
     @Setter
-    public static class ShakeLimit implements Serializable {
-        @Schema(description = "是否开启防抖")
-        private boolean enabled;
-
-        //时间限制,单位时间内发生多次告警时,只算一次。单位:秒
-        @Schema(description = "时间间隔(秒)")
-        private int time;
-
-        //触发阈值,单位时间内发生n次告警,只算一次。
-        @Schema(description = "触发阈值(次)")
-        private int threshold;
-
-        //当发生第一次告警时就触发,为false时表示最后一次才触发(告警有延迟,但是可以统计出次数)
-        @Schema(description = "是否第一次满足条件就触发")
-        private boolean alarmFirst;
-
-    }
-
-    @Getter
-    @Setter
+    @AllArgsConstructor
+    @NoArgsConstructor
     public static class ConditionFilter implements Serializable {
         //过滤条件key 如: temperature
         @Schema(description = "条件key")
@@ -317,11 +347,20 @@ public class DeviceAlarmRule implements Serializable {
         }
 
         public String createExpression(MessageType type) {
+            return createExpression(type, true);
+        }
+
+        public String createExpression(MessageType type, boolean prepareSQL) {
             //函数和this忽略前缀
             if (key.contains("(") || key.startsWith("this")) {
-                return key;
+                return key + operator.symbol + " ? ";
             }
-            return type.getPropertyPrefix() + "this['" + (key.trim()) + "'] " + operator.symbol + " ? ";
+            return type.getPropertyPrefix() + "this['" + (key.trim()) + "'] " + operator.symbol
+                + (prepareSQL ? " ? " : valueIsExpression() ? value : "'" + value + "'");
+        }
+
+        public boolean valueIsExpression() {
+            return false;
         }
 
         public Object convertValue() {

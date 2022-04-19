@@ -57,14 +57,14 @@ public class VertxTcpClientProvider implements NetworkProvider<TcpClientProperti
     public void initClient(VertxTcpClient client, TcpClientProperties properties) {
         NetClient netClient = vertx.createNetClient(properties.getOptions());
         client.setClient(netClient);
-        client.setKeepAliveTimeoutMs(properties.getLong("keepAliveTimeout").orElse(Duration.ofMinutes(10).toMillis()));
+        client.setKeepAliveTimeoutMs(properties.getLong("keepAliveTimeout").orElse(Duration.ofSeconds(10).toMillis()));
         netClient.connect(properties.getPort(), properties.getHost(), result -> {
             if (result.succeeded()) {
                 log.debug("connect tcp [{}:{}] success", properties.getHost(), properties.getPort());
                 client.setRecordParser(payloadParserBuilder.build(properties.getParserType(), properties));
                 client.setSocket(result.result());
             } else {
-                log.error("connect tcp [{}:{}] error", properties.getHost(), properties.getPort(),result.cause());
+                log.error("connect tcp [{}:{}] error", properties.getHost(), properties.getPort(), result.cause());
             }
         });
     }

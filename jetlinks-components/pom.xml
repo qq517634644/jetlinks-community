@@ -5,7 +5,7 @@
     <parent>
         <artifactId>jetlinks-community</artifactId>
         <groupId>org.jetlinks.community</groupId>
-        <version>1.10.0-SNAPSHOT</version>
+        <version>1.13.0-SNAPSHOT</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
     <modelVersion>4.0.0</modelVersion>
@@ -22,6 +22,8 @@
         <module>notify-component</module>
         <module>logging-component</module>
         <module>rule-engine-component</module>
+        <module>configure-component</module>
+        <module>influxdb2-component</module>
     </modules>
 
     <artifactId>jetlinks-components</artifactId>

@@ -208,7 +208,6 @@ public class Influxdb2Service {
      * @param flux flux语法查询
      * @return Publisher<实体>
      */
-    @Deprecated
     public Flux<FluxRecord> query(com.influxdb.query.dsl.Flux flux) {
         return query(flux, Function.identity());
     }

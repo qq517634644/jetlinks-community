@@ -60,7 +60,7 @@ public class DeviceCategoryController {
 
         } catch (Exception e) {
             statics = new ArrayList<>();
-            log.error(e.getMessage(), e);
+            DeviceCategoryController.log.error(e.getMessage(), e);
         }
     }
 
@@ -69,6 +69,13 @@ public class DeviceCategoryController {
     public Flux<DeviceCategory> getAllCategory() {
         return Flux.fromIterable(statics);
     }
+
+    @GetMapping("/_query/no-paging")
+    @Operation(summary = "获取全部分类目录")
+    public Flux<DeviceCategory> getAllCategory2() {
+        return Flux.fromIterable(statics);
+    }
+
 
     @GetMapping("/_tree")
     @Operation(summary = "获取全部分类目录(树结构)")

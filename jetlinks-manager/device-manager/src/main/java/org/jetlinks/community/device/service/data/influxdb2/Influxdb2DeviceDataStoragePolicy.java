@@ -56,8 +56,8 @@ public abstract class Influxdb2DeviceDataStoragePolicy extends AbstractDeviceDat
     protected Mono<Void> doSaveData(String metric, TimeSeriesData data) {
 //        log.info("doSaveData1 >>> metric - {},data - {}", metric, JSON.toJSONString(data));
         Point point = convertTs2Influx(metric, data);
-        manager.save(point);
-        return Mono.empty();
+//        log.info("doSaveData1 >|> metric - {},data - {}", metric, JSON.toJSONString(point));
+        return manager.save(point);
     }
 
     @Override
@@ -84,13 +84,13 @@ public abstract class Influxdb2DeviceDataStoragePolicy extends AbstractDeviceDat
         log.info("doQueryPager >>> \r\nmetric - {},\r\nparamEntity - {}, \r\nmapper - {}",
             metric, JSON.toJSONString(paramEntity), JSON.toJSONString(mapper));
         return Mono.zip(
-            manager.query(getCountFlux(metric, paramEntity))
-                .collectList(),
-            manager.queryInfluxData(getLimitFlux(metric, paramEntity))
-                .map(
-                    data -> (TimeSeriesData) new SimpleTimeSeriesData(data.getTime(), data.getAll())
-                ).map(mapper)
-                .collectList(),
+            manager.query(getCountFluxLog(metric, paramEntity))
+                   .collectList(),
+            manager.queryInfluxData(getLimitFluxLog(metric, paramEntity))
+                   .map(
+                       data -> (TimeSeriesData) new SimpleTimeSeriesData(data.getTime(), data.getValues())
+                   ).map(mapper)
+                   .collectList(),
             (cou, res) -> PagerResult.of(getTotal(cou), res, paramEntity));
     }
 
@@ -130,9 +130,27 @@ public abstract class Influxdb2DeviceDataStoragePolicy extends AbstractDeviceDat
             .count().yield("count");
     }
 
-    protected com.influxdb.query.dsl.Flux getCountFlux(String metric, QueryParamEntity param) {
-        return baseFlux(metric, param)
-            .count().yield("count");
+    /**
+     * 查询数据条目数
+     *
+     * @param metric 表名
+     * @param param  参数名
+     * @return Flux查询
+     */
+    protected com.influxdb.query.dsl.Flux getCountFluxLog(String metric, QueryParamEntity param) {
+        List<Restrictions> restrictionsList = FluxBuildUtil.queryParamToFilterLog(param);
+        if (restrictionsList.size() > 0) {
+            return baseFlux(metric, param)
+                .pivot(new String[]{"_time"}, new String[]{"_field"}, "_value")
+                .filter(Restrictions.or(restrictionsList.toArray(new Restrictions[0])))
+                .rename(new HashMap<String, String>() {{
+                    put("content", "_value");
+                }})
+                .count().yield("count");
+        } else {
+            return baseFlux(metric, param)
+                .count().yield("count");
+        }
     }
 
     /**
@@ -158,11 +176,29 @@ public abstract class Influxdb2DeviceDataStoragePolicy extends AbstractDeviceDat
             );
     }
 
-    protected com.influxdb.query.dsl.Flux getLimitFlux(String metric, QueryParamEntity param) {
-        return baseFlux(metric, param)
-            .limit(param.getPageSize(),
-                (param.getPageIndex() - param.getFirstPageIndex()) * param.getPageSize()
-            );
+    /**
+     * 分页查询
+     *
+     * @param metric 表名
+     * @param param  参数
+     * @return Flux语法
+     */
+    protected com.influxdb.query.dsl.Flux getLimitFluxLog(String metric, QueryParamEntity param) {
+        List<Restrictions> restrictionsList = FluxBuildUtil.queryParamToFilterLog(param);
+        if (restrictionsList.size() > 0) {
+            return baseFlux(metric, param)
+                .pivot(new String[]{"_time"}, new String[]{"_field"}, "_value")
+                .filter(Restrictions.or(restrictionsList.toArray(new Restrictions[0])))
+                .limit(param.getPageSize(),
+                       (param.getPageIndex() - param.getFirstPageIndex()) * param.getPageSize()
+                );
+        } else {
+            return baseFlux(metric, param)
+                .pivot(new String[]{"_time"}, new String[]{"_field"}, "_value")
+                .limit(param.getPageSize(),
+                       (param.getPageIndex() - param.getFirstPageIndex()) * param.getPageSize()
+                );
+        }
     }
 
     /**
@@ -179,7 +215,15 @@ public abstract class Influxdb2DeviceDataStoragePolicy extends AbstractDeviceDat
             .filter(Restrictions.field().equal(property));
     }
 
-    protected com.influxdb.query.dsl.Flux getFlux(String productId, Set<String> properties, String deviceId, QueryParamEntity param) {
+    /**
+     * @param productId
+     * @param properties
+     * @param deviceId
+     * @param param
+     * @return
+     */
+    protected com.influxdb.query.dsl.Flux getFlux(String productId, Set<String> properties, String deviceId,
+                                                  QueryParamEntity param) {
         com.influxdb.query.dsl.Flux flux = baseFlux(productId, deviceId, param);
         List<Restrictions> fieldList = new ArrayList<>();
         properties.forEach(property -> fieldList.add(Restrictions.field().equal(property)));
@@ -187,30 +231,62 @@ public abstract class Influxdb2DeviceDataStoragePolicy extends AbstractDeviceDat
         return flux;
     }
 
+    /**
+     * 指标查询
+     *
+     * @param productId 产品ID
+     * @param deviceId  设备ID
+     * @param param     查询参数
+     * @return flux查询
+     */
     protected com.influxdb.query.dsl.Flux baseFlux(String productId, String deviceId, QueryParamEntity param) {
-        com.influxdb.query.dsl.Flux flux = com.influxdb.query.dsl.Flux
-            .from(influxdb2Properties.getBucket())
-            // TODO 完善
-            .range(Instant.now().plus(-2, ChronoUnit.DAYS))
-            .filter(Restrictions.measurement().equal("properties_" + productId))
-            .filter(Restrictions.tag("deviceId").equal(deviceId));
+        List<Instant> instantList = FluxBuildUtil.queryParamToRangeTime(param);
+        com.influxdb.query.dsl.Flux flux;
+        if (instantList.size() > 1) {
+            flux = com.influxdb.query.dsl.Flux
+                .from(influxdb2Properties.getBucket())
+                .range(instantList.get(0), instantList.get(1))
+                .filter(Restrictions.measurement().equal("properties_" + productId))
+                .filter(Restrictions.tag("deviceId").equal(deviceId));
+        } else {
+            flux = com.influxdb.query.dsl.Flux
+                .from(influxdb2Properties.getBucket())
+                .range(Instant.now().plus(-6, ChronoUnit.HOURS))
+                .filter(Restrictions.measurement().equal("properties_" + productId))
+                .filter(Restrictions.tag("deviceId").equal(deviceId));
+        }
+
         flux = flux.sort(makeSortColumnList(param.getSorts())).withDesc(true);
         return flux;
     }
 
+    /**
+     * 基础查询
+     *
+     * @param metric 表名
+     * @param param  查询参数
+     * @return flux查询
+     */
     protected com.influxdb.query.dsl.Flux baseFlux(String metric, QueryParamEntity param) {
-        com.influxdb.query.dsl.Flux flux = com.influxdb.query.dsl.Flux
-            .from(influxdb2Properties.getBucket())
-            // TODO 完善
-            .range(Instant.now().plus(-2, ChronoUnit.DAYS))
-            .filter(Restrictions.measurement().equal(metric));
+        List<Instant> instantList = FluxBuildUtil.queryParamToRangeTime(param);
+        com.influxdb.query.dsl.Flux flux;
+        if (instantList.size() > 1) {
+            flux = com.influxdb.query.dsl.Flux
+                .from(influxdb2Properties.getBucket())
+                .range(instantList.get(0), instantList.get(1))
+                .filter(Restrictions.measurement().equal(metric));
+        } else {
+            flux = com.influxdb.query.dsl.Flux
+                .from(influxdb2Properties.getBucket())
+                .range(Instant.now().plus(-6, ChronoUnit.HOURS))
+                .filter(Restrictions.measurement().equal(metric));
+        }
         Map<String, List<Restrictions>> fieldListMap = new HashMap<>(16);
         param.getTerms().forEach(term -> {
-            // TODO
             switch (term.getTermType()) {
                 case "eq":
                     fieldListMap.computeIfAbsent(term.getColumn(), r -> new ArrayList<>())
-                        .add(Restrictions.tag(term.getColumn()).equal(term.getValue()));
+                                .add(Restrictions.tag(term.getColumn()).equal(term.getValue()));
                     break;
                 default:
                     log.error(JSON.toJSONString(term));

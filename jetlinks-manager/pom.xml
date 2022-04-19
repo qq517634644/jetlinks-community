@@ -5,7 +5,7 @@
     <parent>
         <artifactId>jetlinks-community</artifactId>
         <groupId>org.jetlinks.community</groupId>
-        <version>1.10.0-SNAPSHOT</version>
+        <version>1.13.0-SNAPSHOT</version>
     </parent>
     <packaging>pom</packaging>
     <modelVersion>4.0.0</modelVersion>
@@ -14,11 +14,13 @@
     <modules>
         <module>authentication-manager</module>
         <module>device-manager</module>
+        <module>modbus-manager</module>
         <module>network-manager</module>
         <module>notify-manager</module>
         <module>logging-manager</module>
         <module>rule-engine-manager</module>
         <module>visualization-manager</module>
+	    <module>zlan-manager</module>
     </modules>
 
 </project>
