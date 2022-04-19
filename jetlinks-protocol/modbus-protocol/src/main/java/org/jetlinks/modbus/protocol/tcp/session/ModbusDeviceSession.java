@@ -131,6 +131,7 @@ public class ModbusDeviceSession implements DeviceSession {
      */
     @Override
     public boolean isAlive() {
+        // TODO  离线后清理掉分布式任务调度的任务注册信息
         return !closed && System.currentTimeMillis() - lastPingTime < keepaliveTimeout;
     }
 
@@ -141,6 +142,7 @@ public class ModbusDeviceSession implements DeviceSession {
      */
     @Override
     public void onClose(Runnable call) {
+
     }
 
     @Override

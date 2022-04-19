@@ -19,11 +19,6 @@ public class RegisterRequest implements TcpPayload {
     private long dtuId;
 
     @Override
-    public byte[] toBytes() {
-        return new byte[0];
-    }
-
-    @Override
     public void fromBytes(byte[] bytes, int offset, String deviceId) {
         String message = new String(bytes);
         String[] data = message.split("\\|\\|");

@@ -33,11 +33,6 @@ public class ReadProperty implements TcpPayload, ModbusDeviceMessage {
     private short funCode;
 
     @Override
-    public byte[] toBytes() {
-        return new byte[0];
-    }
-
-    @Override
     public void fromBytes(byte[] bytes, int offset, String deviceId) {
         log.debug("from byte - {}", HexUtil.encodeHexStr(bytes));
         this.deviceId = Long.parseLong(String.valueOf(bytes[0]));

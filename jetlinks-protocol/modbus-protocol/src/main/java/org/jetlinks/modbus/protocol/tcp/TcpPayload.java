@@ -5,7 +5,9 @@ package org.jetlinks.modbus.protocol.tcp;
  */
 public interface TcpPayload {
 
-    byte[] toBytes();
+    default byte[] toBytes() {
+        return new byte[0];
+    }
 
     /**
      * 原始负载转换

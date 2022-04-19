@@ -22,6 +22,9 @@ public class ZlanTask {
 
     private final ReactiveRedisOperations<String, String> redis;
 
+    /**
+     * 缓存最后一次的指标数据 方便计算步进值
+     */
     @PostConstruct
     public void init() {
         redis.<String, String>opsForHash().entries("device:properties:last").subscribe(it -> {

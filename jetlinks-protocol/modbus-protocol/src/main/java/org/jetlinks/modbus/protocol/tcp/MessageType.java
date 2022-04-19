@@ -21,7 +21,7 @@ public enum MessageType {
      *
      */
     REGISTER_REQ("设备注册", RegisterRequest::new),
-    ERROR("设备注册", RegisterRequest::new),
+    ERROR("设备异常", RegisterRequest::new),
     HEARTBEAT("设备心跳", Heartbeat::new),
     READ_PROPERTY("读取设备属性", ReadProperty::new);
 

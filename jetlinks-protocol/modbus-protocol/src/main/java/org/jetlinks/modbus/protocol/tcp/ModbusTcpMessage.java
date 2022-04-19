@@ -8,6 +8,7 @@ import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.jetlinks.core.utils.BytesUtils;
 
+import javax.annotation.Nonnull;
 import java.util.Arrays;
 
 /**
@@ -46,7 +47,8 @@ public class ModbusTcpMessage {
         return Unpooled.wrappedBuffer(toBytes());
     }
 
-    public byte[] toBytes() {
+    @Nonnull
+    private byte[] toBytes() {
         byte[] header = new byte[5];
         header[0] = (byte) type.ordinal();
 

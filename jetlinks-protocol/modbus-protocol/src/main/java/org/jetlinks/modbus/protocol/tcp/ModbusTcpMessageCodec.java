@@ -154,6 +154,8 @@ public class ModbusTcpMessageCodec implements DeviceMessageCodec {
                             onlineMessage.setDeviceId(finalDeviceId);
                             onlineMessage.setTimestamp(System.currentTimeMillis());
                             log.debug("online - {}", onlineMessage);
+                            // TODO 分布式部署要把当前设备和连接的服务器信息注册到任务中心
+                            // TODO 以便让任务调度器准确的将指令发送给响应的socket执行
                             return Mono.just(onlineMessage);
                         }))
                     //为空可能设备不存在或者没有配置tcp_auth_key,响应错误信息.
@@ -275,7 +277,13 @@ public class ModbusTcpMessageCodec implements DeviceMessageCodec {
         return String.valueOf(dtuId);
     }
 
-
+    /**
+     * 发送设备查询指令
+     *
+     * @param dtuId   dtuID
+     * @param session 会话保持
+     * @return 发送状态
+     */
     private Mono<Boolean> sendMessage(String dtuId, DeviceSession session) {
         CommandEnum.INSTANCE.timeOutOrComplete(dtuId);
         byte[] code = CommandEnum.INSTANCE.pollCommand(dtuId);

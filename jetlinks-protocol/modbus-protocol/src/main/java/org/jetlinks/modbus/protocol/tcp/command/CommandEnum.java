@@ -69,10 +69,7 @@ public enum CommandEnum {
             log.warn("当前计数器【{}】未清零 -- {}", dtuId, counter);
             return null;
         }
-        if (counter.get() < 0) {
-            counter = new AtomicInteger(0);
-            commandCounterMap.put(dtuId, counter);
-        }
+        resetCounter(counter.get(), dtuId);
         // poll之前计数器+1 阻止其他进程拿到指令
         commandCounterMap.computeIfAbsent(dtuId, it -> new AtomicInteger(0)).incrementAndGet();
         return commandQueueMap.computeIfAbsent(dtuId, it -> new ConcurrentLinkedQueue<>()).poll();
@@ -85,6 +82,16 @@ public enum CommandEnum {
      */
     public void timeOutOrComplete(String dtuId) {
         int counter = commandCounterMap.computeIfAbsent(dtuId, it -> new AtomicInteger(0)).decrementAndGet();
+        resetCounter(counter, dtuId);
+    }
+
+    /**
+     * DTU指令计数器小于零的时候重置
+     *
+     * @param counter 计数器值
+     * @param dtuId   dtuID
+     */
+    private void resetCounter(int counter, String dtuId) {
         if (counter < 0) {
             commandCounterMap.put(dtuId, new AtomicInteger(0));
         }
